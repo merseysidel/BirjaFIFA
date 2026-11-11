@@ -230,6 +230,7 @@ table.tbl{width:100%;border-collapse:collapse;min-width:0}
 .tg{font-style:normal;font-size:12px;border-radius:5px;padding:3px 8px;font-weight:500}
 .tg.good{background:var(--win-soft);color:var(--win)}
 .tg.bad{background:var(--loss-soft);color:var(--loss)}
+.tr-seg{margin:6px 0 4px}
 .tr-note{margin:10px 0 0;color:var(--muted);font-size:12px}
 .tr-list{margin:12px 0 0;padding:0;list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:4px 18px;font-size:13px}
 .tr-list li{display:flex;justify-content:space-between;gap:8px;border-bottom:1px solid var(--line-soft);padding:4px 0}
@@ -349,7 +350,7 @@ var DOCKEYS=['s25-singles','s25-doubles','s25-dream','s26-singles','s26-doubles'
 var $=function(s){return document.querySelector(s)};
 var esc=function(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})};
 
-var S={season:'26',view:'table',mode:'singles',editing:false,profile:null,formN:5};
+var S={season:'26',view:'table',mode:'singles',editing:false,profile:null,formN:5,tm:'singles'};
 try{
   var sv=JSON.parse(localStorage.getItem('eafc-league')||'{}');
   if(['25','26','27','all'].indexOf(sv.season)>-1)S.season=sv.season;
@@ -629,50 +630,95 @@ function viewDream(){
 }
 
 /* ---------- player card: bio + traits ---------- */
-var TRAITS=[
-  {k:'att',n:'Attack',tip:'Attack: საშუალოდ რამდენ გოლს ვიტან ერთ მატჩში (1×1 და 2×2 ერთად). 4 და მეტი გოლი = 100.'},
-  {k:'def',n:'Defence',tip:'Defence: საშუალოდ რამდენ გოლს ვუშვებ ერთ მატჩში. რაც ნაკლებია, მით უკეთესი: 0 გაშვებული = 100, 4 და მეტი = 0.'},
-  {k:'dom',n:'Killer Instinct',tip:'Killer Instinct: გამარჯვებებიდან რამდენს ვიგებ 2 ან მეტი გოლით. გვიჩვენებს, ვასრულებთ თუ არა მატჩს დამაჯერებლად, თუ მხოლოდ ერთი გოლით ვიგებთ.'},
-  {k:'nrv',n:'Clutch',tip:'Clutch: მოგების წილი ძალიან ახლო მატჩებში: ერთი გოლის სხვაობით დასრულებულ თამაშებში და პენალტების სერიაში. გვიჩვენებს, ვინ უძლებს ნერვებს გადამწყვეტ მომენტში.'},
-  {k:'one',n:'Duels',tip:'Duels: მოგების წილი 1×1 (Singles) მატჩებში, ანუ პირისპირ დუელებში.'},
-  {k:'team',n:'Chemistry',tip:'Chemistry: მოგების წილი 2×2 (Doubles) მატჩებში. გვიჩვენებს, რამდენად კარგად ვთამაშობთ პარტნიორთან ერთად.'}
+var TIPS_T={
+  att:'Attack: საშუალოდ რამდენ გოლს ვიტან ერთ მატჩში. 4 და მეტი გოლი = 100.',
+  attD:'Attack: წყვილი საშუალოდ რამდენ გოლს ვიტანთ ერთ მატჩში. 4 და მეტი გოლი = 100.',
+  def:'Defence: საშუალოდ რამდენ გოლს ვუშვებ ერთ მატჩში. რაც ნაკლებია, მით უკეთესი: 0 გაშვებული = 100, 4 და მეტი = 0.',
+  defD:'Defence: წყვილი საშუალოდ რამდენ გოლს ვუშვებთ ერთ მატჩში. რაც ნაკლებია, მით უკეთესი: 0 გაშვებული = 100, 4 და მეტი = 0.',
+  dom:'Killer Instinct: გამარჯვებებიდან რამდენს ვიგებ 2 ან მეტი გოლით. გვიჩვენებს, ვასრულებთ თუ არა მატჩს დამაჯერებლად.',
+  nrv:'Clutch: მოგების წილი ძალიან ახლო მატჩებში: ერთი გოლის სხვაობით დასრულებულ თამაშებში და პენალტების სერიაში.',
+  dis:'Discipline: ყვითელი და წითელი ბარათები მატჩზე (ყვითელი = 1 ქულა, წითელი = 3 ქულა). რაც ნაკლებია, მით უკეთესი: 0 ბარათი = 100, მატჩზე 2 და მეტი ქულა = 0. ითვლება მხოლოდ იმ მატჩებით, რომლებზეც Match Facts გვაქვს.',
+  disD:'Discipline: წყვილის ყვითელი და წითელი ბარათები მატჩზე (ყვითელი = 1 ქულა, წითელი = 3 ქულა). რაც ნაკლებია, მით უკეთესი: 0 ბარათი = 100, მატჩზე 2 და მეტი ქულა = 0. ითვლება მხოლოდ იმ მატჩებით, რომლებზეც Match Facts გვაქვს.',
+  eff:'Efficiency: 70% Finishing (გატანილი გოლები ÷ კარში დარტყმები) + 30% Dominance (მოგებებიდან რამდენში მქონდა მოწინააღმდეგეზე მეტი ბურთის ფლობა). ითვლება მხოლოდ იმ მატჩებით, რომლებზეც Match Facts გვაქვს.',
+  effD:'Efficiency: 70% Finishing (წყვილის გატანილი გოლები ÷ კარში დარტყმები) + 30% Dominance (მოგებებიდან რამდენში გვქონდა მოწინააღმდეგეზე მეტი ბურთის ფლობა). ითვლება მხოლოდ 2×2 მატჩებით, რომლებზეც Match Facts გვაქვს.',
+  team:'Chemistry: მოგების წილი 2×2 (Doubles) მატჩებში. გვიჩვენებს, რამდენად კარგად ვთამაშობთ პარტნიორთან ერთად.',
+  adp:'Adaptability: რამდენად კარგად ვიმარჯვებ ნებისმიერ პარტნიორთან და არა მხოლოდ ერთთან. ითვლება პარტნიორების მიხედვით მოგების % სხვაობით საუკეთესო და უარეს პარტნიორს შორის (მინიმუმ 3 მატჩი თითოეულთან): რაც ნაკლებია სხვაობა, მით მაღალია ქულა.'
+};
+var TRAITS_S=[
+  {k:'att',n:'Attack',tip:TIPS_T.att},
+  {k:'def',n:'Defence',tip:TIPS_T.def},
+  {k:'dom',n:'Killer Instinct',tip:TIPS_T.dom},
+  {k:'nrv',n:'Clutch',tip:TIPS_T.nrv},
+  {k:'dis',n:'Discipline',tip:TIPS_T.dis},
+  {k:'eff',n:'Efficiency',tip:TIPS_T.eff}
 ];
-function traitRaw(p){
-  var s=[],d=[];
-  function res(m,side,gf,ga){return gf>ga?'W':gf<ga?'L':pw(m,side)}
-  getMatches('singles').forEach(function(m){
-    if(m.a===p){var r=res(m,'a',m.sa,m.sb);if(r)s.push([m.sa,m.sb,r])}
-    else if(m.b===p){var r2=res(m,'b',m.sb,m.sa);if(r2)s.push([m.sb,m.sa,r2])}
+var TRAITS_D=[
+  {k:'att',n:'Attack',tip:TIPS_T.attD},
+  {k:'def',n:'Defence',tip:TIPS_T.defD},
+  {k:'dis',n:'Discipline',tip:TIPS_T.disD},
+  {k:'team',n:'Chemistry',tip:TIPS_T.team},
+  {k:'eff',n:'Efficiency',tip:TIPS_T.effD},
+  {k:'adp',n:'Adaptability',tip:TIPS_T.adp}
+];
+function traitsOf(mode){return mode==='doubles'?TRAITS_D:TRAITS_S}
+/* one entry per match for player p in the given mode */
+function modeEntries(p,mode){
+  var out=[];
+  getMatches(mode).forEach(function(m){
+    var side=null;
+    if(mode==='singles'){side=m.a===p?'a':m.b===p?'b':null}
+    else{side=m.a.indexOf(p)>-1?'a':m.b.indexOf(p)>-1?'b':null}
+    if(!side)return;
+    var o=side==='a'?'b':'a',gf=m['s'+side],ga=m['s'+o];
+    var r=gf>ga?'W':gf<ga?'L':pw(m,side);
+    if(!r)return;
+    var partner=null;
+    if(mode==='doubles'){var tm=side==='a'?m.a:m.b;partner=tm.filter(function(x){return x!==p})[0]||null}
+    out.push({gf:gf,ga:ga,r:r,m:m,side:side,o:o,partner:partner});
   });
-  getMatches('doubles').forEach(function(m){
-    if(m.a.indexOf(p)>-1){var r=res(m,'a',m.sa,m.sb);if(r)d.push([m.sa,m.sb,r])}
-    else if(m.b.indexOf(p)>-1){var r2=res(m,'b',m.sb,m.sa);if(r2)d.push([m.sb,m.sa,r2])}
-  });
-  var all=s.concat(d),n=all.length;
-  function share(arr,fn){return arr.length?arr.filter(fn).length/arr.length:null}
-  var tight=all.filter(function(x){return Math.abs(x[0]-x[1])<=1});
-  var tightW=tight.filter(function(x){return x[2]==='W'}).length;
-  var wins=all.filter(function(x){return x[2]==='W'}),bigW=wins.filter(function(x){return x[0]-x[1]>=2}).length;
-  return {
-    n:n,
-    att:n?all.reduce(function(a,x){return a+x[0]},0)/n:null,
-    def:n?all.reduce(function(a,x){return a+x[1]},0)/n:null,
-    dom:wins.length?bigW/wins.length:null,
-    nrv:tight.length?tightW/tight.length:null,
-    one:share(s,function(x){return x[2]==='W'}),
-    team:share(d,function(x){return x[2]==='W'}),
-    closeW:tightW,closeN:tight.length,bigW:bigW,winN:wins.length
-  };
+  return out;
+}
+function modeRaw(p,mode){
+  var E=modeEntries(p,mode),n=E.length,res={n:n};
+  res.att=n?E.reduce(function(a,x){return a+x.gf},0)/n:null;
+  res.def=n?E.reduce(function(a,x){return a+x.ga},0)/n:null;
+  var wins=E.filter(function(x){return x.r==='W'});
+  var tight=E.filter(function(x){return Math.abs(x.gf-x.ga)<=1}),tightW=tight.filter(function(x){return x.r==='W'}).length;
+  var bigW=wins.filter(function(x){return x.gf-x.ga>=2}).length;
+  res.dom=wins.length?bigW/wins.length:null;res.bigW=bigW;res.winN=wins.length;
+  res.nrv=tight.length?tightW/tight.length:null;res.closeW=tightW;res.closeN=tight.length;
+  res.team=n?wins.length/n:null;
+  /* discipline: yellow=1, red=3, only matches with card data */
+  var cm=E.filter(function(x){return x.m['y'+x.side]!=null||x.m['r'+x.side]!=null});
+  var Y=0,Rr=0;cm.forEach(function(x){Y+=x.m['y'+x.side]||0;Rr+=x.m['r'+x.side]||0});
+  res.dis=cm.length?(Y+3*Rr)/cm.length:null;res.cardN=cm.length;res.Y=Y;res.R=Rr;
+  /* efficiency: 0.7*Finishing + 0.3*Dominance */
+  var sm=E.filter(function(x){return x.m['sot'+x.side]!=null});
+  var goals=0,sot=0;sm.forEach(function(x){goals+=x.gf;sot+=x.m['sot'+x.side]});
+  var F=sot>0?Math.min(1,goals/sot):null;
+  var pm=wins.filter(function(x){return x.m['p'+x.side]!=null&&x.m['p'+x.o]!=null});
+  var D=pm.length?pm.filter(function(x){return x.m['p'+x.side]>x.m['p'+x.o]}).length/pm.length:null;
+  res.F=F;res.D=D;res.eff=(F!=null&&D!=null)?0.7*F+0.3*D:null;
+  /* adaptability: gap between best and worst partner win% (3+ matches each) */
+  if(mode==='doubles'){
+    var by={};E.forEach(function(x){if(!x.partner||PL.indexOf(x.partner)<0)return;var z=by[x.partner]||(by[x.partner]={g:0,w:0});z.g++;if(x.r==='W')z.w++});
+    var rates=Object.keys(by).filter(function(k){return by[k].g>=3}).map(function(k){return by[k].w/by[k].g});
+    if(rates.length>=2){var mx=Math.max.apply(null,rates),mn=Math.min.apply(null,rates);res.adp=1-(mx-mn);res.gap=mx-mn}
+    else{res.adp=null}
+  }
+  return res;
 }
 function traitScores(){
-  /* absolute 0-100 scale: goals 0-4 per match map to 0-100, the rest are percentages */
-  var raw={},sc={};
+  /* absolute 0-100 scale: goals 0-4 per match map to 0-100, cards 0-2 points per match map to 100-0, the rest are percentages */
+  var raw={s:{},d:{}},sc={s:{},d:{}};
   PL.forEach(function(q){
-    raw[q]=traitRaw(q);sc[q]={};
-    TRAITS.forEach(function(t){
-      var v=raw[q][t.k];
-      sc[q][t.k]=v==null?null:Math.round(Math.max(0,Math.min(100,
-        t.k==='att'?v/4*100:t.k==='def'?100-v/4*100:v*100)));
+    [['s','singles'],['d','doubles']].forEach(function(mm){
+      var r=modeRaw(q,mm[1]);raw[mm[0]][q]=r;sc[mm[0]][q]={};
+      traitsOf(mm[1]).forEach(function(t){
+        var v=r[t.k];
+        sc[mm[0]][q][t.k]=v==null?null:Math.round(Math.max(0,Math.min(100,
+          t.k==='att'?v/4*100:t.k==='def'?100-v/4*100:t.k==='dis'?100-v/2*100:v*100)));
+      });
     });
   });
   return {raw:raw,sc:sc};
@@ -683,9 +729,12 @@ function traitText(k,r){
   if(k==='def')return v.toFixed(1)+' conceded / match';
   if(k==='nrv')return Math.round(v*100)+'% ('+r.closeW+'/'+r.closeN+')';
   if(k==='dom')return Math.round(v*100)+'% ('+r.bigW+'/'+r.winN+')';
+  if(k==='dis')return v.toFixed(1)+' pts / match ('+r.Y+' Y, '+r.R+' R)';
+  if(k==='eff')return Math.round(v*100)+' (F '+Math.round(r.F*100)+'% · D '+Math.round(r.D*100)+'%)';
+  if(k==='adp')return Math.round(v*100)+' (gap '+Math.round(r.gap*100)+' pts)';
   return Math.round(v*100)+'%';
 }
-function radarHtml(scores){
+function radarHtml(scores,TRAITS){
   var Wd=400,Hd=310,cx=200,cy=150,R=80,N=TRAITS.length;
   function pt(i,r){var a=-Math.PI/2+i*2*Math.PI/N;return [cx+r*Math.cos(a),cy+r*Math.sin(a),a]}
   function xy(q){return q[0].toFixed(1)+','+q[1].toFixed(1)}
@@ -728,17 +777,20 @@ function heroHtml(p,photoBtn){
     '<div class="idc-club"><small>Favorite club</small>'+(b.club?esc(b.club):'—')+'</div>'+
     ((photoBtn||editBtn)?'<div class="idc-btns">'+editBtn+photoBtn+'</div>':'')+'</div></div>'+
     '<div class="idc-facts"><div><b>'+(b.h?b.h+' cm':'—')+'</b>Height</div><div><b>'+(b.w?b.w+' kg':'—')+'</b>Weight</div><div><b>'+(yr!=null?yr+' years':'—')+'</b>Experience'+(b.since?' · since '+b.since:'')+'</div></div></div>';
-  var T=traitScores(),sc=T.sc[p],raw=T.raw[p];
-  var valid=TRAITS.filter(function(t){return sc[t.k]!=null}).sort(function(a,b2){return sc[b2.k]-sc[a.k]});
+  var T=traitScores(),tm=S.tm==='doubles'?'doubles':'singles',key=tm==='doubles'?'d':'s',TR=traitsOf(tm);
+  var sc=T.sc[key][p],raw=T.raw[key][p];
+  var valid=TR.filter(function(t){return sc[t.k]!=null}).sort(function(a,b2){return sc[b2.k]-sc[a.k]});
   var tags='';
   if(valid.length>=2&&sc[valid[0].k]!==sc[valid[valid.length-1].k]){
     var k=valid.length>=4?2:1;
     function chips(list,cls){return list.map(function(t){return '<i class="tg '+cls+' tip" tabindex="0">'+esc(t.n)+'<span class="tb" role="tooltip">'+esc(t.tip)+'</span></i>'}).join('')}
     tags='<div class="tr-tags"><div class="row"><span>Strengths</span>'+chips(valid.slice(0,k),'good')+'</div><div class="row"><span>Weaknesses</span>'+chips(valid.slice(-k).reverse(),'bad')+'</div></div>';
   }
-  var list='<ul class="tr-list">'+TRAITS.map(function(t,i){return '<li class="tip '+(i%2?'r':'l')+'" tabindex="0"><span>'+esc(t.n)+'</span><b>'+traitText(t.k,raw)+'</b><span class="tb" role="tooltip">'+esc(t.tip)+'</span></li>'}).join('')+'</ul>';
-  var note=raw.n&&raw.n<15?'<p class="tr-note">ამ პერიოდში მატჩები ცოტაა ('+raw.n+'), ამიტომ შეფასება ზუსტი არ არის.</p>':'';
-  var tr='<div class="traits"><h3>Player Traits</h3><p class="sub">ჩვენი მატჩების შედეგებიდან · '+scopeLabel()+'</p>'+radarHtml(sc)+tags+list+note+'</div>';
+  var list='<ul class="tr-list">'+TR.map(function(t,i){return '<li class="tip '+(i%2?'r':'l')+'" tabindex="0"><span>'+esc(t.n)+'</span><b>'+traitText(t.k,raw)+'</b><span class="tb" role="tooltip">'+esc(t.tip)+'</span></li>'}).join('')+'</ul>';
+  var note=raw.n&&raw.n<15?'<p class="tr-note">ამ პერიოდში '+(tm==='doubles'?'Doubles':'Singles')+' მატჩები ცოტაა ('+raw.n+'), ამიტომ შეფასება ზუსტი არ არის.</p>':'';
+  var empty=!raw.n?'<p class="tr-note">ამ პერიოდში '+(tm==='doubles'?'Doubles':'Singles')+' მატჩი არ არის.</p>':'';
+  var seg='<div class="seg small tr-seg" role="group" aria-label="Player Traits mode"><button data-act="tmode" data-v="singles" aria-pressed="'+(tm==='singles')+'">Singles 1×1</button><button data-act="tmode" data-v="doubles" aria-pressed="'+(tm==='doubles')+'">Doubles 2×2</button></div>';
+  var tr='<div class="traits"><h3>Player Traits</h3>'+seg+'<p class="sub">'+(tm==='doubles'?'მხოლოდ Doubles მატჩებიდან':'მხოლოდ Singles მატჩებიდან')+' · '+scopeLabel()+'</p>'+radarHtml(sc,TR)+tags+list+note+empty+'</div>';
   return '<div class="dr-hero">'+card+tr+'</div>';
 }
 function openBioEditor(p){
@@ -985,6 +1037,7 @@ document.addEventListener('click',function(e){
   if(act==='season'){S.season=el.dataset.v;persist();render()}
   else if(act==='view'){S.view=el.dataset.v;persist();render()}
   else if(act==='mode'){S.mode=el.dataset.v;persist();render()}
+  else if(act==='tmode'){S.tm=el.dataset.v;render()}
   else if(act==='formn'){S.formN=Number(el.dataset.v);persist();render()}
   else if(act==='profile'){S.profile=el.dataset.p;render()}
   else if(act==='close'){S.profile=null;render()}
