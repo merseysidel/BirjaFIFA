@@ -640,8 +640,8 @@ var TIPS_T={
   nrv:'Clutch: მოგების წილი ძალიან ახლო მატჩებში: ერთი გოლის სხვაობით დასრულებულ თამაშებში და პენალტების სერიაში.',
   dis:'Discipline: ყვითელი და წითელი ბარათები მატჩზე (ყვითელი = 1 ქულა, წითელი = 3 ქულა). რაც ნაკლებია, მით უკეთესი: 0 ბარათი = 100, მატჩზე 2 და მეტი ქულა = 0. ითვლება მხოლოდ იმ მატჩებით, რომლებზეც Match Facts გვაქვს.',
   disD:'Discipline: წყვილის ყვითელი და წითელი ბარათები მატჩზე (ყვითელი = 1 ქულა, წითელი = 3 ქულა). რაც ნაკლებია, მით უკეთესი: 0 ბარათი = 100, მატჩზე 2 და მეტი ქულა = 0. ითვლება მხოლოდ იმ მატჩებით, რომლებზეც Match Facts გვაქვს.',
-  eff:'Efficiency: 70% Finishing (გატანილი გოლები ÷ კარში დარტყმები) + 30% Dominance (მოგებებიდან რამდენში მქონდა მოწინააღმდეგეზე მეტი ბურთის ფლობა). ითვლება მხოლოდ იმ მატჩებით, რომლებზეც Match Facts გვაქვს.',
-  effD:'Efficiency: 70% Finishing (წყვილის გატანილი გოლები ÷ კარში დარტყმები) + 30% Dominance (მოგებებიდან რამდენში გვქონდა მოწინააღმდეგეზე მეტი ბურთის ფლობა). ითვლება მხოლოდ 2×2 მატჩებით, რომლებზეც Match Facts გვაქვს.',
+  eff:'Dominance: 70% კარში დარტყმები (მატჩზე საშუალოდ, 10 და მეტი = 100) + 30% ბურთის ფლობა (მოგებებიდან რამდენში მქონდა მოწინააღმდეგეზე მეტი ფლობა). გვიჩვენებს, რამდენად ვაწვები მეტოქეს და ვაკონტროლებ თამაშს. ითვლება მხოლოდ იმ მატჩებით, რომლებზეც Match Facts გვაქვს.',
+  effD:'Dominance: 70% კარში დარტყმები (წყვილის მატჩზე საშუალოდ, 10 და მეტი = 100) + 30% ბურთის ფლობა (მოგებებიდან რამდენში გვქონდა მოწინააღმდეგეზე მეტი ფლობა). ითვლება მხოლოდ 2×2 მატჩებით, რომლებზეც Match Facts გვაქვს.',
   team:'Chemistry: მოგების წილი 2×2 (Doubles) მატჩებში. გვიჩვენებს, რამდენად კარგად ვთამაშობთ პარტნიორთან ერთად.',
   adp:'Adaptability: რამდენად კარგად ვიმარჯვებ ნებისმიერ პარტნიორთან და არა მხოლოდ ერთთან. ითვლება პარტნიორების მიხედვით მოგების % სხვაობით საუკეთესო და უარეს პარტნიორს შორის (მინიმუმ 3 მატჩი თითოეულთან): რაც ნაკლებია სხვაობა, მით მაღალია ქულა.'
 };
@@ -651,14 +651,14 @@ var TRAITS_S=[
   {k:'dom',n:'Killer Instinct',tip:TIPS_T.dom},
   {k:'nrv',n:'Clutch',tip:TIPS_T.nrv},
   {k:'dis',n:'Discipline',tip:TIPS_T.dis},
-  {k:'eff',n:'Efficiency',tip:TIPS_T.eff}
+  {k:'eff',n:'Dominance',tip:TIPS_T.eff}
 ];
 var TRAITS_D=[
   {k:'att',n:'Attack',tip:TIPS_T.attD},
   {k:'def',n:'Defence',tip:TIPS_T.defD},
   {k:'dis',n:'Discipline',tip:TIPS_T.disD},
   {k:'team',n:'Chemistry',tip:TIPS_T.team},
-  {k:'eff',n:'Efficiency',tip:TIPS_T.effD},
+  {k:'eff',n:'Dominance',tip:TIPS_T.effD},
   {k:'adp',n:'Adaptability',tip:TIPS_T.adp}
 ];
 function traitsOf(mode){return mode==='doubles'?TRAITS_D:TRAITS_S}
@@ -693,10 +693,10 @@ function modeRaw(p,mode){
   var cm=E.filter(function(x){return x.m['y'+x.side]!=null||x.m['r'+x.side]!=null});
   var Y=0,Rr=0;cm.forEach(function(x){Y+=x.m['y'+x.side]||0;Rr+=x.m['r'+x.side]||0});
   res.dis=cm.length?(Y+3*Rr)/cm.length:null;res.cardN=cm.length;res.Y=Y;res.R=Rr;
-  /* efficiency: 0.7*Finishing + 0.3*Dominance */
+  /* dominance: 0.7*shots on target (10/match = 100%) + 0.3*possession (share of wins with more possession) */
   var sm=E.filter(function(x){return x.m['sot'+x.side]!=null});
-  var goals=0,sot=0;sm.forEach(function(x){goals+=x.gf;sot+=x.m['sot'+x.side]});
-  var F=sot>0?Math.min(1,goals/sot):null;
+  var sot=0;sm.forEach(function(x){sot+=x.m['sot'+x.side]});
+  var F=sm.length?Math.min(1,sot/sm.length/10):null;res.sotAvg=sm.length?sot/sm.length:null;
   var pm=wins.filter(function(x){return x.m['p'+x.side]!=null&&x.m['p'+x.o]!=null});
   var D=pm.length?pm.filter(function(x){return x.m['p'+x.side]>x.m['p'+x.o]}).length/pm.length:null;
   res.F=F;res.D=D;res.eff=(F!=null&&D!=null)?0.7*F+0.3*D:null;
@@ -731,7 +731,7 @@ function traitText(k,r){
   if(k==='nrv')return Math.round(v*100)+'% ('+r.closeW+'/'+r.closeN+')';
   if(k==='dom')return Math.round(v*100)+'% ('+r.bigW+'/'+r.winN+')';
   if(k==='dis')return v.toFixed(1)+' pts / match ('+r.Y+' Y, '+r.R+' R)';
-  if(k==='eff')return Math.round(v*100)+' (F '+Math.round(r.F*100)+'% · D '+Math.round(r.D*100)+'%)';
+  if(k==='eff')return Math.round(v*100)+' ('+r.sotAvg.toFixed(1)+' SOT · '+Math.round(r.D*100)+'% poss)';
   if(k==='adp')return Math.round(v*100)+' (gap '+Math.round(r.gap*100)+' pts)';
   return Math.round(v*100)+'%';
 }
