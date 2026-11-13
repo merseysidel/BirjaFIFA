@@ -837,16 +837,17 @@ function renderDrawer(){
   var photoBtn=(assets&&db&&canWrite!==false)?'<label class="btn sm" style="cursor:pointer">ფოტოს ატვირთვა<input type="file" accept="image/*" hidden data-up="'+p+'"></label>':'';
   var html='<div class="scrim" data-act="close"></div><aside class="panel" role="dialog" aria-modal="true" aria-label="'+esc(p)+'"><div class="dr-top"><button class="btn sm ghost" data-act="close">დახურვა ✕</button></div>';
   html+=heroHtml(p,photoBtn);
-  html+='<div class="dr-kpi"><div><b>'+pctTxt(sa)+'</b>1×1 Win %</div><div><b>'+pctTxt(dp)+'</b>2×2 Win %</div><div><b>'+(sa.gp?(sa.gf/sa.gp).toFixed(1):'–')+'</b>Goals / match (1×1)</div></div>';
-  html+='<div style="display:flex;gap:14px;align-items:center;margin-top:10px;color:var(--muted);font-size:13px">Form · last 5 (1×1) '+(sa.form.length?pills(sa.form):'–')+'</div>';
+  var isD=S.tm==='doubles',ag=isD?dp:sa,lab=isD?'2×2':'1×1';
+  html+='<div class="dr-kpi"><div><b>'+pctTxt(ag)+'</b>'+lab+' Win %</div><div><b>'+(ag.gp?(ag.gf/ag.gp).toFixed(1):'–')+'</b>Goals / match ('+lab+')</div><div><b>'+(ag.gp?(ag.ga/ag.gp).toFixed(1):'–')+'</b>Conceded / match ('+lab+')</div></div>';
+  html+='<div style="display:flex;gap:14px;align-items:center;margin-top:10px;color:var(--muted);font-size:13px">Form · last 5 ('+lab+') '+(ag.form.length?pills(ag.form):'–')+'</div>';
 
   /* seasons */
   var srows=SEASONS.map(function(s){
-    var a=singlesAgg(getMatches('singles',[s]))[p],d=doublesAgg(getMatches('doubles',[s])).per[p];
-    if(!a.gp&&!d.gp)return '';
-    return '<tr><td class="l">FC '+s+'</td><td>'+a.gp+'</td><td>'+rec(a)+'</td><td>'+pctTxt(a)+'</td><td>'+d.gp+'</td><td>'+rec(d)+'</td><td>'+pctTxt(d)+'</td></tr>';
+    var a=isD?doublesAgg(getMatches('doubles',[s])).per[p]:singlesAgg(getMatches('singles',[s]))[p];
+    if(!a.gp)return '';
+    return '<tr><td class="l">FC '+s+'</td><td>'+a.gp+'</td><td>'+rec(a)+'</td><td>'+pctTxt(a)+'</td><td>'+a.gf+':'+a.ga+'</td></tr>';
   }).join('');
-  html+='<section class="dr-sec"><h3>Seasons</h3><div class="tablewrap"><table class="tbl"><thead><tr><th class="l">Season</th><th>1×1 GP</th><th>W–L</th><th>%</th><th>2×2 GP</th><th>W–L</th><th>%</th></tr></thead><tbody>'+srows+'</tbody></table></div></section>';
+  html+='<section class="dr-sec"><h3>Seasons ('+lab+')</h3><div class="tablewrap"><table class="tbl"><thead><tr><th class="l">Season</th><th>GP</th><th>W–L</th><th>Win %</th><th>Goals</th></tr></thead><tbody>'+srows+'</tbody></table></div></section>';
 
   /* head to head */
   var h2h=PL.filter(function(q){return q!==p}).map(function(q){
@@ -857,19 +858,19 @@ function renderDrawer(){
     });
     return [q,t];
   }).filter(function(r){return r[1].gp>0}).sort(function(a,b){return b[1].gp-a[1].gp});
-  html+='<section class="dr-sec"><h3>Head to head (1×1)</h3>'+(h2h.length?'<div class="tablewrap"><table class="tbl"><thead><tr><th class="l">Opponent</th><th>GP</th><th>W–L</th><th>Goals</th><th>Win %</th></tr></thead><tbody>'+
+  if(!isD)html+='<section class="dr-sec"><h3>Head to head (1×1)</h3>'+(h2h.length?'<div class="tablewrap"><table class="tbl"><thead><tr><th class="l">Opponent</th><th>GP</th><th>W–L</th><th>Goals</th><th>Win %</th></tr></thead><tbody>'+
     h2h.map(function(r){return '<tr><td class="l"><span class="who">'+avatar(r[0],26)+esc(r[0])+'</span></td><td>'+r[1].gp+'</td><td>'+rec(r[1])+'</td><td>'+r[1].gf+':'+r[1].ga+'</td><td>'+pctTxt(r[1])+'</td></tr>'}).join('')+'</tbody></table></div>':emptyBox('ამ პერიოდში Singles მატჩი არ არის.'))+'</section>';
 
   /* partners */
   var partners=Object.keys(da.pairs).filter(function(k){return k.split(' & ').indexOf(p)>-1}).map(function(k){
     return [k.split(' & ').filter(function(n){return n!==p})[0],da.pairs[k]];
   }).sort(function(a,b){return b[1].gp-a[1].gp});
-  html+='<section class="dr-sec"><h3>Partners (2×2)</h3>'+(partners.length?'<div class="tablewrap"><table class="tbl"><thead><tr><th class="l">Partner</th><th>GP</th><th>W–L</th><th>Win %</th></tr></thead><tbody>'+
+  if(isD)html+='<section class="dr-sec"><h3>Partners (2×2)</h3>'+(partners.length?'<div class="tablewrap"><table class="tbl"><thead><tr><th class="l">Partner</th><th>GP</th><th>W–L</th><th>Win %</th></tr></thead><tbody>'+
     partners.map(function(r){return '<tr><td class="l"><span class="who">'+avatar(r[0],26)+esc(r[0])+'</span></td><td>'+r[1].gp+'</td><td>'+rec(r[1])+'</td><td>'+pctTxt(r[1])+'</td></tr>'}).join('')+'</tbody></table></div>':emptyBox('ამ პერიოდში Doubles მატჩი არ არის.'))+'</section>';
 
   /* clubs */
   var cl=Object.keys(da.clubs[p]).map(function(k){return [k,da.clubs[p][k]]}).sort(function(a,b){return b[1].gp-a[1].gp||pct(b[1])-pct(a[1])}).slice(0,6);
-  if(cl.length)html+='<section class="dr-sec"><h3>Most used clubs (2×2)</h3><div class="tablewrap"><table class="tbl"><thead><tr><th class="l">Club</th><th>GP</th><th>W–L</th><th>Win %</th></tr></thead><tbody>'+
+  if(isD&&cl.length)html+='<section class="dr-sec"><h3>Most used clubs (2×2)</h3><div class="tablewrap"><table class="tbl"><thead><tr><th class="l">Club</th><th>GP</th><th>W–L</th><th>Win %</th></tr></thead><tbody>'+
     cl.map(function(r){return '<tr><td class="l">'+esc(r[0])+'</td><td>'+r[1].gp+'</td><td>'+rec(r[1])+'</td><td>'+pctTxt(r[1])+'</td></tr>'}).join('')+'</tbody></table></div></section>';
 
   /* highlights */
@@ -879,11 +880,19 @@ function renderDrawer(){
     if(mine&&mine[0]>mine[1]&&(!bigW||mine[0]-mine[1]>bigW[0]-bigW[1]))bigW=mine;
   });
   var facts=[];
-  if(bigW)facts.push(['Biggest win (1×1)',bigW[0]+':'+bigW[1]+' · '+esc(bigW[2])]);
-  var st=bestStreak(p,sMs);if(st)facts.push(['Longest win streak (1×1)',st+' matches']);
-  if(sa.gp)facts.push(['Goals conceded / match (1×1)',(sa.ga/sa.gp).toFixed(1)]);
-  var bp=partners.filter(function(r){return r[1].gp>=3}).sort(function(a,b){return pct(b[1])-pct(a[1])})[0];
-  if(bp)facts.push(['Best partner (3+ matches)',esc(bp[0])+' · '+pctTxt(bp[1])]);
+  if(!isD){
+    if(bigW)facts.push(['Biggest win (1×1)',bigW[0]+':'+bigW[1]+' · '+esc(bigW[2])]);
+    var st=bestStreak(p,sMs);if(st)facts.push(['Longest win streak (1×1)',st+' matches']);
+  }else{
+    var bigD=null;
+    dMs.forEach(function(m){
+      var mine=m.a.indexOf(p)>-1?[m.sa,m.sb,m.b]:m.b.indexOf(p)>-1?[m.sb,m.sa,m.a]:null;
+      if(mine&&mine[0]>mine[1]&&(!bigD||mine[0]-mine[1]>bigD[0]-bigD[1]))bigD=mine;
+    });
+    if(bigD)facts.push(['Biggest win (2×2)',bigD[0]+':'+bigD[1]+' · vs '+bigD[2].map(esc).join(' & ')]);
+    var bp=partners.filter(function(r){return r[1].gp>=3}).sort(function(a,b){return pct(b[1])-pct(a[1])})[0];
+    if(bp)facts.push(['Best partner (3+ matches)',esc(bp[0])+' · '+pctTxt(bp[1])]);
+  }
   if(facts.length)html+='<section class="dr-sec"><h3>Highlights</h3><ul class="facts">'+facts.map(function(f){return '<li><span>'+f[0]+'</span><b>'+f[1]+'</b></li>'}).join('')+'</ul></section>';
 
   /* dream team */
