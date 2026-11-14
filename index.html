@@ -638,8 +638,8 @@ var TIPS_T={
   defD:'Defence: წყვილი საშუალოდ რამდენ გოლს ვუშვებთ ერთ მატჩში. რაც ნაკლებია, მით უკეთესი: 0 გაშვებული = 100, 4 და მეტი = 0.',
   dom:'Killer Instinct: გამარჯვებებიდან რამდენს ვიგებ 2 ან მეტი გოლით. გვიჩვენებს, ვასრულებთ თუ არა მატჩს დამაჯერებლად.',
   nrv:'Clutch: მოგების წილი ძალიან ახლო მატჩებში: ერთი გოლის სხვაობით დასრულებულ თამაშებში და პენალტების სერიაში.',
-  dis:'Discipline: ყვითელი და წითელი ბარათები მატჩზე (ყვითელი = 1 ქულა, წითელი = 3 ქულა). რაც ნაკლებია, მით უკეთესი: 0 ბარათი = 100, მატჩზე 2 და მეტი ქულა = 0. ითვლება მხოლოდ იმ მატჩებით, რომლებზეც Match Facts გვაქვს.',
-  disD:'Discipline: წყვილის ყვითელი და წითელი ბარათები მატჩზე (ყვითელი = 1 ქულა, წითელი = 3 ქულა). რაც ნაკლებია, მით უკეთესი: 0 ბარათი = 100, მატჩზე 2 და მეტი ქულა = 0. ითვლება მხოლოდ იმ მატჩებით, რომლებზეც Match Facts გვაქვს.',
+  dis:'Discipline: ყოველ მატჩს ბარათების მიხედვით ქულა ეძლევა: 0 ყვითელი = 100, 1 = 75, 2 = 50, 3 და მეტი = 0. წითელი ბარათი ამ მატჩს პირდაპირ 0-ს აძლევს. საბოლოო ქულა მატჩების საშუალოა. ითვლება მხოლოდ იმ მატჩებით, რომლებზეც Match Facts გვაქვს.',
+  disD:'Discipline: წყვილის ყოველ მატჩს ბარათების მიხედვით ქულა ეძლევა: 0 ყვითელი = 100, 1 = 75, 2 = 50, 3 და მეტი = 0. წითელი ბარათი ამ მატჩს პირდაპირ 0-ს აძლევს. საბოლოო ქულა მატჩების საშუალოა. ითვლება მხოლოდ იმ მატჩებით, რომლებზეც Match Facts გვაქვს.',
   eff:'Dominance: 70% კარში დარტყმები (მატჩზე საშუალოდ, 10 და მეტი = 100) + 30% ბურთის ფლობა (მოგებებიდან რამდენში მქონდა მოწინააღმდეგეზე მეტი ფლობა). გვიჩვენებს, რამდენად ვაწვები მეტოქეს და ვაკონტროლებ თამაშს. ითვლება მხოლოდ იმ მატჩებით, რომლებზეც Match Facts გვაქვს.',
   effD:'Dominance: 70% კარში დარტყმები (წყვილის მატჩზე საშუალოდ, 10 და მეტი = 100) + 30% ბურთის ფლობა (მოგებებიდან რამდენში გვქონდა მოწინააღმდეგეზე მეტი ფლობა). ითვლება მხოლოდ 2×2 მატჩებით, რომლებზეც Match Facts გვაქვს.',
   team:'Chemistry: მოგების წილი 2×2 (Doubles) მატჩებში. გვიჩვენებს, რამდენად კარგად ვთამაშობთ პარტნიორთან ერთად.',
@@ -691,8 +691,8 @@ function modeRaw(p,mode){
   res.team=n?wins.length/n:null;
   /* discipline: yellow=1, red=3, only matches with card data */
   var cm=E.filter(function(x){return x.m['y'+x.side]!=null||x.m['r'+x.side]!=null});
-  var Y=0,Rr=0;cm.forEach(function(x){Y+=x.m['y'+x.side]||0;Rr+=x.m['r'+x.side]||0});
-  res.dis=cm.length?(Y+3*Rr)/cm.length:null;res.cardN=cm.length;res.Y=Y;res.R=Rr;
+  var Y=0,Rr=0,ds=0;cm.forEach(function(x){var y=x.m['y'+x.side]||0,rd=x.m['r'+x.side]||0;Y+=y;Rr+=rd;ds+=rd>0?0:(y===0?1:y===1?0.75:y===2?0.5:0)});
+  res.dis=cm.length?ds/cm.length:null;res.cardN=cm.length;res.Y=Y;res.R=Rr;
   /* dominance: 0.7*shots on target (10/match = 100%) + 0.3*possession (share of wins with more possession) */
   var sm=E.filter(function(x){return x.m['sot'+x.side]!=null});
   var sot=0;sm.forEach(function(x){sot+=x.m['sot'+x.side]});
@@ -718,7 +718,7 @@ function traitScores(){
       traitsOf(mm[1]).forEach(function(t){
         var v=r[t.k];
         sc[mm[0]][q][t.k]=v==null?null:Math.round(Math.max(0,Math.min(100,
-          t.k==='att'?v/4*100:t.k==='def'?100-v/4*100:t.k==='dis'?100-v/2*100:v*100)));
+          t.k==='att'?v/4*100:t.k==='def'?100-v/4*100:v*100)));
       });
     });
   });
@@ -730,7 +730,7 @@ function traitText(k,r){
   if(k==='def')return v.toFixed(1)+' conceded / match';
   if(k==='nrv')return Math.round(v*100)+'% ('+r.closeW+'/'+r.closeN+')';
   if(k==='dom')return Math.round(v*100)+'% ('+r.bigW+'/'+r.winN+')';
-  if(k==='dis')return v.toFixed(1)+' pts / match ('+r.Y+' Y, '+r.R+' R)';
+  if(k==='dis')return Math.round(v*100)+' ('+r.Y+' Y, '+r.R+' R)';
   if(k==='eff')return Math.round(v*100)+' ('+r.sotAvg.toFixed(1)+' SOT · '+Math.round(r.D*100)+'% poss)';
   if(k==='adp')return Math.round(v*100)+' (gap '+Math.round(r.gap*100)+' pts)';
   return Math.round(v*100)+'%';
