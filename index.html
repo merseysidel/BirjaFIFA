@@ -259,6 +259,7 @@ table.tbl{width:100%;border-collapse:collapse;min-width:0}
 .idc-meta .sep{display:inline-block;width:1px;height:13px;background:var(--line);margin:0 10px;vertical-align:-2px}
 .dr-sec{margin-top:28px}
 .dr-sec h3{margin:0 0 10px;font-family:var(--f-display);font-weight:600;font-size:20px;letter-spacing:.03em}
+.dr-sec .cap{margin:0;font-size:14px;line-height:1.65;color:var(--ink,inherit)}
 .dr-sec .tablewrap table td,.dr-sec .tablewrap table th{padding:9px 9px}
 .facts{margin:0;padding:0;list-style:none;display:grid;gap:8px}
 .facts li{display:flex;justify-content:space-between;gap:14px;border-bottom:1px solid var(--line-soft);padding-bottom:8px;font-size:14px}
@@ -920,6 +921,8 @@ function renderDrawer(){
         dt.starters.map(function(x){return '<li><b style="font-weight:500">'+esc(x.name||'—')+'</b><span>'+esc(x.pos)+(x.r!=null?' '+x.r:'')+'</span></li>'}).join('')+'</ul></section>';
     }
   }
+  var CAP={"Mirian": "თამაშს ისე უყურებს, თითქოს მაგიდასთან ჩაის სვამს და შენ ამასობაში ჰტენის და გტენის. ბურთი მისია, ტემპიც მისია, ნერვიც რკინისაა და თან იცის, რომ კარგია, ეგო სულ ოდნავ ზედმეტადაც აქვს 😄 უბრალოდ მაგ სიმშვიდეს ხანდახან შოთა პენალტებზე აფორიაქებს, ამიტომ იმ წუთებში ცოტა მეტი შიში არ აწყენდა.", "Shota": "შოუმენია. ყველაფერს ლამაზად აკეთებს, უნდა რომ ყველა გოლი ჩაიწერონ და განმეორებაზე გაუშვან, და მერე თავად უკანა ხაზში პრახადნოი დვორია, ყველა შედის 😅 ბარსელონა ხომ ისეთი კლუბია, ვინც უნდა ლამაზად დამარცხდეს. ახლო თამაშში ცოტა ეკარგება თავი, მაგრამ მერე უცებ აღმოჩნდება, რომ პენალტებში ყველაზე ცივი ის ყოფილა. დაცვაზე ცოტა იმუშავოს და გაგიჟდება.", "David": "\"რეალი ხომ ჩემია\" ტიპია, ბრენდის იმედად დგას და ზოგჯერ თამაშიც ავიწყდება 😄 გული დიდი აქვს და ბრძოლას არ ეშვება, მაგრამ კარი სულ ღიაა, ისე, როგორც სასტუმროს ლობი. შეტევაში ცოტა მეტი კრეატივი, უკან ცოტა მეტი ავტობუსი და რაღაცა გამოვა.", "Amiran": "ის ბიჭია, ვისთანაც ყველა კარგად არის. ყველაზე ტაქტიკაზე დამოკიდებულია, თუმცა ძირითადად უშედეგოდ 😅 მაგრამ წყვილში სულ სხვა კაცია, ყველას უგებს და ყველას უწყობს, ანუ ვინც გვერდით დაუდგება, ბედნიერია. მარტო რომ ცოტა უფრო თამამად ითამაშოს და ბურთთან ერთი ნაბიჯით ახლოს იყოს, მაშინ ოქროს თუ არა, ვერცხლის გამოდნობა შესაძლებელია."};
+  if(!isD&&CAP[p])html+='<section class="dr-sec"><h3>Claude About the Player</h3><p class="cap">'+esc(CAP[p])+'</p></section>';
   html+='</aside>';
   el.innerHTML=html;
   var np=el.querySelector('.panel');if(np&&keepTop)np.scrollTop=keepTop;
