@@ -636,7 +636,7 @@ var TIPS_T={
   attD:'Attack: წყვილი საშუალოდ რამდენ გოლს ვიტანთ ერთ მატჩში. 4 და მეტი გოლი = 100.',
   def:'Defence: ყოველ მატჩს გაშვებული გოლების მიხედვით ქულა ეძლევა: 0 გაშვებული = 100, 1 = 75, 2 = 50, 3 = 15, 4 და მეტი = 0. საბოლოო ქულა მატჩების საშუალოა. ითვლება ძირითადი დროის გოლებით.',
   defD:'Defence: წყვილის ყოველ მატჩს გაშვებული გოლების მიხედვით ქულა ეძლევა: 0 გაშვებული = 100, 1 = 75, 2 = 50, 3 = 15, 4 და მეტი = 0. საბოლოო ქულა მატჩების საშუალოა. ითვლება ძირითადი დროის გოლებით.',
-  dom:'Killer Instinct: გამარჯვებებიდან რამდენს ვიგებ 2 ან მეტი გოლით. გვიჩვენებს, ვასრულებთ თუ არა მატჩს დამაჯერებლად.',
+  dom:'Killer Instinct: ყოველ გამარჯვებას სხვაობის მიხედვით ქულა ეძლევა: პენალტებით ან 1 გოლით მოგება = 0, 2 გოლით = 75, 3, 4 და 5 გოლით = 100, 6 და მეტით = 150 (სრული განადგურება). საბოლოო ქულა მოგებების საშუალოა, მაქსიმუმ 100.',
   nrv:'Clutch: მოგების წილი ძალიან ახლო მატჩებში: ერთი გოლის სხვაობით დასრულებულ თამაშებში და პენალტების სერიაში.',
   dis:'Discipline: ყოველ მატჩს ბარათების მიხედვით ქულა ეძლევა: 0 ყვითელი = 100, 1 = 75, 2 = 50, 3 და მეტი = 0. წითელი ბარათი ამ მატჩს პირდაპირ 0-ს აძლევს. საბოლოო ქულა მატჩების საშუალოა. ითვლება მხოლოდ იმ მატჩებით, რომლებზეც Match Facts გვაქვს.',
   disD:'Discipline: წყვილის ყოველ მატჩს ბარათების მიხედვით ქულა ეძლევა: 0 ყვითელი = 100, 1 = 75, 2 = 50, 3 და მეტი = 0. წითელი ბარათი ამ მატჩს პირდაპირ 0-ს აძლევს. საბოლოო ქულა მატჩების საშუალოა. ითვლება მხოლოდ იმ მატჩებით, რომლებზეც Match Facts გვაქვს.',
@@ -688,7 +688,8 @@ function modeRaw(p,mode){
   var wins=E.filter(function(x){return x.r==='W'});
   var tight=E.filter(function(x){return Math.abs(x.gf-x.ga)<=1}),tightW=tight.filter(function(x){return x.r==='W'}).length;
   var bigW=wins.filter(function(x){return x.gf-x.ga>=2}).length;
-  res.dom=wins.length?bigW/wins.length:null;res.bigW=bigW;res.winN=wins.length;
+  var KT=function(mg){return mg<=1?0:mg===2?0.75:mg<=5?1:1.5};
+  res.dom=wins.length?wins.reduce(function(a,x){return a+KT(x.gf-x.ga)},0)/wins.length:null;res.bigW=bigW;res.winN=wins.length;
   res.nrv=tight.length?tightW/tight.length:null;res.closeW=tightW;res.closeN=tight.length;
   res.team=n?wins.length/n:null;
   /* discipline: yellow=1, red=3, only matches with card data */
@@ -731,7 +732,7 @@ function traitText(k,r){
   if(k==='att')return v.toFixed(1)+' goals / match';
   if(k==='def')return v.toFixed(1)+' conceded / match';
   if(k==='nrv')return Math.round(v*100)+'% ('+r.closeW+'/'+r.closeN+')';
-  if(k==='dom')return Math.round(v*100)+'% ('+r.bigW+'/'+r.winN+')';
+  if(k==='dom')return Math.min(100,Math.round(v*100))+' ('+r.winN+' wins)';
   if(k==='dis')return Math.round(v*100)+' ('+r.Y+' Y, '+r.R+' R)';
   if(k==='eff')return Math.round(v*100)+' ('+r.sotAvg.toFixed(1)+' SOT · '+Math.round(r.D*100)+'% poss)';
   if(k==='adp')return Math.round(v*100)+' (gap '+Math.round(r.gap*100)+' pts)';
