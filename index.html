@@ -861,6 +861,20 @@ function renderDrawer(){
   if(!isD)html+='<section class="dr-sec"><h3>Head to head (1×1)</h3>'+(h2h.length?'<div class="tablewrap"><table class="tbl"><thead><tr><th class="l">Opponent</th><th>GP</th><th>W–L</th><th>Goals</th><th>Win %</th></tr></thead><tbody>'+
     h2h.map(function(r){return '<tr><td class="l"><span class="who">'+avatar(r[0],26)+esc(r[0])+'</span></td><td>'+r[1].gp+'</td><td>'+rec(r[1])+'</td><td>'+r[1].gf+':'+r[1].ga+'</td><td>'+pctTxt(r[1])+'</td></tr>'}).join('')+'</tbody></table></div>':emptyBox('ამ პერიოდში Singles მატჩი არ არის.'))+'</section>';
 
+  /* singles clubs */
+  if(!isD){
+    var sc2={};
+    sMs.forEach(function(m){
+      var side=m.a===p?'a':m.b===p?'b':null;if(!side)return;
+      var club=side==='a'?m.ta:m.tb;if(!club)return;
+      var o=side==='a'?'b':'a';
+      var z=sc2[club]=sc2[club]||blank();addRes(z,m['s'+side],m['s'+o],pw(m,side));
+    });
+    var scl=Object.keys(sc2).map(function(k){return [k,sc2[k]]}).sort(function(a,b){return b[1].gp-a[1].gp||pct(b[1])-pct(a[1])}).slice(0,6);
+    if(scl.length)html+='<section class="dr-sec"><h3>Most used clubs (1×1)</h3><div class="tablewrap"><table class="tbl"><thead><tr><th class="l">Club</th><th>GP</th><th>W–L</th><th>Win %</th></tr></thead><tbody>'+
+      scl.map(function(r){return '<tr><td class="l">'+esc(r[0])+'</td><td>'+r[1].gp+'</td><td>'+rec(r[1])+'</td><td>'+pctTxt(r[1])+'</td></tr>'}).join('')+'</tbody></table></div></section>';
+  }
+
   /* partners */
   var partners=Object.keys(da.pairs).filter(function(k){return k.split(' & ').indexOf(p)>-1}).map(function(k){
     return [k.split(' & ').filter(function(n){return n!==p})[0],da.pairs[k]];
