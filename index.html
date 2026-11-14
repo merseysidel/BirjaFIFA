@@ -634,8 +634,8 @@ function viewDream(){
 var TIPS_T={
   att:'Attack: საშუალოდ რამდენ გოლს ვიტან ერთ მატჩში. 4 და მეტი გოლი = 100.',
   attD:'Attack: წყვილი საშუალოდ რამდენ გოლს ვიტანთ ერთ მატჩში. 4 და მეტი გოლი = 100.',
-  def:'Defence: საშუალოდ რამდენ გოლს ვუშვებ ერთ მატჩში. რაც ნაკლებია, მით უკეთესი: 0 გაშვებული = 100, 4 და მეტი = 0.',
-  defD:'Defence: წყვილი საშუალოდ რამდენ გოლს ვუშვებთ ერთ მატჩში. რაც ნაკლებია, მით უკეთესი: 0 გაშვებული = 100, 4 და მეტი = 0.',
+  def:'Defence: ყოველ მატჩს გაშვებული გოლების მიხედვით ქულა ეძლევა: 0 გაშვებული = 100, 1 = 75, 2 = 50, 3 = 15, 4 და მეტი = 0. საბოლოო ქულა მატჩების საშუალოა. ითვლება ძირითადი დროის გოლებით.',
+  defD:'Defence: წყვილის ყოველ მატჩს გაშვებული გოლების მიხედვით ქულა ეძლევა: 0 გაშვებული = 100, 1 = 75, 2 = 50, 3 = 15, 4 და მეტი = 0. საბოლოო ქულა მატჩების საშუალოა. ითვლება ძირითადი დროის გოლებით.',
   dom:'Killer Instinct: გამარჯვებებიდან რამდენს ვიგებ 2 ან მეტი გოლით. გვიჩვენებს, ვასრულებთ თუ არა მატჩს დამაჯერებლად.',
   nrv:'Clutch: მოგების წილი ძალიან ახლო მატჩებში: ერთი გოლის სხვაობით დასრულებულ თამაშებში და პენალტების სერიაში.',
   dis:'Discipline: ყოველ მატჩს ბარათების მიხედვით ქულა ეძლევა: 0 ყვითელი = 100, 1 = 75, 2 = 50, 3 და მეტი = 0. წითელი ბარათი ამ მატჩს პირდაპირ 0-ს აძლევს. საბოლოო ქულა მატჩების საშუალოა. ითვლება მხოლოდ იმ მატჩებით, რომლებზეც Match Facts გვაქვს.',
@@ -683,6 +683,8 @@ function modeRaw(p,mode){
   var E=modeEntries(p,mode),n=E.length,res={n:n};
   res.att=n?E.reduce(function(a,x){return a+x.gf},0)/n:null;
   res.def=n?E.reduce(function(a,x){return a+x.ga},0)/n:null;
+  var DT=[1,0.75,0.5,0.15,0];
+  res.defS=n?E.reduce(function(a,x){return a+DT[Math.min(4,x.ga)]},0)/n:null;
   var wins=E.filter(function(x){return x.r==='W'});
   var tight=E.filter(function(x){return Math.abs(x.gf-x.ga)<=1}),tightW=tight.filter(function(x){return x.r==='W'}).length;
   var bigW=wins.filter(function(x){return x.gf-x.ga>=2}).length;
@@ -716,9 +718,9 @@ function traitScores(){
     [['s','singles'],['d','doubles']].forEach(function(mm){
       var r=modeRaw(q,mm[1]);raw[mm[0]][q]=r;sc[mm[0]][q]={};
       traitsOf(mm[1]).forEach(function(t){
-        var v=r[t.k];
+        var v=t.k==='def'?r.defS:r[t.k];
         sc[mm[0]][q][t.k]=v==null?null:Math.round(Math.max(0,Math.min(100,
-          t.k==='att'?v/4*100:t.k==='def'?100-v/4*100:v*100)));
+          t.k==='att'?v/4*100:v*100)));
       });
     });
   });
